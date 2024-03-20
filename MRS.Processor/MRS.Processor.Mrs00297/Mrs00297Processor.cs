@@ -434,13 +434,13 @@ namespace MRS.Processor.Mrs00297
                                 }
                                 else if (!string.IsNullOrEmpty(exp.CASHIER_LOGINNAME))
                                 {
-                                    dicExtInfo["EXP_" + item.IMP_MEST_CODE].CASHIER_LOGINNAME = exp.CASHIER_LOGINNAME;
-                                    dicExtInfo["EXP_" + item.IMP_MEST_CODE].CASHIER_USERNAME = exp.CASHIER_USERNAME;
+                                    dicExtInfo["IMP_" + item.IMP_MEST_CODE].CASHIER_LOGINNAME = exp.CASHIER_LOGINNAME;
+                                    dicExtInfo["IMP_" + item.IMP_MEST_CODE].CASHIER_USERNAME = exp.CASHIER_USERNAME;
                                 }
                                 else
                                 {
-                                    dicExtInfo["EXP_" + item.IMP_MEST_CODE].CASHIER_LOGINNAME = exp.LAST_EXP_LOGINNAME;
-                                    dicExtInfo["EXP_" + item.IMP_MEST_CODE].CASHIER_USERNAME = exp.LAST_EXP_USERNAME;
+                                    dicExtInfo["IMP_" + item.IMP_MEST_CODE].CASHIER_LOGINNAME = exp.LAST_EXP_LOGINNAME;
+                                    dicExtInfo["IMP_" + item.IMP_MEST_CODE].CASHIER_USERNAME = exp.LAST_EXP_USERNAME;
                                 }
                                 var serviceReq = serviceRerqs.FirstOrDefault(o => (exp.PRESCRIPTION_ID ?? exp.SERVICE_REQ_ID) == o.ID);
                                 if (serviceReq != null)
