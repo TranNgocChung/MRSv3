@@ -62,6 +62,10 @@ namespace MRS.Processor.Mrs00297
 
         Dictionary<string, HIS_EMPLOYEE> dicEmployee = new Dictionary<string, HIS_EMPLOYEE>();
 
+        List<HIS_TRANSACTION> listTransaction = new List<HIS_TRANSACTION>();
+
+        List<V_HIS_EXP_MEST> listExpMest = new List<V_HIS_EXP_MEST>();
+
 
         public Mrs00297Processor(CommonParam param, string reportTypeCode)
             : base(param, reportTypeCode)
@@ -271,6 +275,14 @@ namespace MRS.Processor.Mrs00297
                     listMaterialOut = listMaterialOut.Where(o => dicExtInfo.ContainsKey("EXP_" + o.EXP_MEST_CODE) && Filter.REQUEST_DEPARTMENT_IDs.Contains(dicExtInfo["EXP_" + o.EXP_MEST_CODE].REQUEST_DEPARTMENT_ID)).ToList();
                     listMedicineOut = listMedicineOut.Where(o => dicExtInfo.ContainsKey("EXP_" + o.EXP_MEST_CODE) && Filter.REQUEST_DEPARTMENT_IDs.Contains(dicExtInfo["EXP_" + o.EXP_MEST_CODE].REQUEST_DEPARTMENT_ID)).ToList();
                 }
+                //loc theo nguoi ban
+                if (Filter.CASHIER_LOGINNAMEs != null)
+                {
+                    listMedicineIn = listMedicineIn.Where(o => dicExtInfo.ContainsKey("IMP_" + o.IMP_MEST_CODE) && Filter.CASHIER_LOGINNAMEs.Contains(dicExtInfo["IMP_" + o.IMP_MEST_CODE].CASHIER_LOGINNAME??"")).ToList();
+                    listMaterialIn = listMaterialIn.Where(o => dicExtInfo.ContainsKey("IMP_" + o.IMP_MEST_CODE) && Filter.CASHIER_LOGINNAMEs.Contains(dicExtInfo["IMP_" + o.IMP_MEST_CODE].CASHIER_LOGINNAME??"")).ToList();
+                    listMaterialOut = listMaterialOut.Where(o => dicExtInfo.ContainsKey("EXP_" + o.EXP_MEST_CODE) && Filter.CASHIER_LOGINNAMEs.Contains(dicExtInfo["EXP_" + o.EXP_MEST_CODE].CASHIER_LOGINNAME??"")).ToList();
+                    listMedicineOut = listMedicineOut.Where(o => dicExtInfo.ContainsKey("EXP_" + o.EXP_MEST_CODE) && Filter.CASHIER_LOGINNAMEs.Contains(dicExtInfo["EXP_" + o.EXP_MEST_CODE].CASHIER_LOGINNAME??"")).ToList();
+                }
 
                 CreateListData(listMedicineIn, listMaterialIn, listMedicineOut, listMaterialOut, dicExtInfo);
                 CreateTotal();
@@ -297,16 +309,17 @@ namespace MRS.Processor.Mrs00297
                 {
                     int limit = (count <= ManagerConstant.MAX_REQUEST_LENGTH_PARAM) ? count : ManagerConstant.MAX_REQUEST_LENGTH_PARAM;
                     var listIDs = listExpMestId.Skip(skip).Take(limit).ToList();
-                    HisExpMestFilterQuery filter = new HisExpMestFilterQuery();
+                    HisExpMestViewFilterQuery filter = new HisExpMestViewFilterQuery();
                     filter.IDs = listIDs;
-                    var import = new HisExpMestManager().Get(filter);
+                    var import = new HisExpMestManager().GetView(filter);
                     if (import != null && import.Count > 0)
                     {
+                        listExpMest.AddRange(import);
                         var billIds = import.Select(o => o.BILL_ID ?? 0).ToList();
                         HisTransactionFilterQuery tranfilter = new HisTransactionFilterQuery();
                         tranfilter.IDs = billIds;
                         var bills = new HisTransactionManager().Get(tranfilter) ?? new List<HIS_TRANSACTION>();
-
+                        listTransaction.AddRange(bills);
                         var serviceReqIds = import.Select(o => o.PRESCRIPTION_ID ?? o.SERVICE_REQ_ID ?? 0).ToList();
                         HisServiceReqFilterQuery serviceReqfilter = new HisServiceReqFilterQuery();
                         serviceReqfilter.IDs = serviceReqIds;
@@ -327,10 +340,15 @@ namespace MRS.Processor.Mrs00297
                                 dicExtInfo["EXP_" + item.EXP_MEST_CODE].CASHIER_USERNAME = bill.CASHIER_USERNAME;
                                 dicExtInfo["EXP_" + item.EXP_MEST_CODE].EXEMPTION = bill.EXEMPTION??0;
                             }
-                            else
+                            else if (!string.IsNullOrEmpty(item.CASHIER_LOGINNAME))
                             {
                                 dicExtInfo["EXP_" + item.EXP_MEST_CODE].CASHIER_LOGINNAME = item.CASHIER_LOGINNAME;
                                 dicExtInfo["EXP_" + item.EXP_MEST_CODE].CASHIER_USERNAME = item.CASHIER_USERNAME;
+                            }
+                            else 
+                            {
+                                dicExtInfo["EXP_" + item.EXP_MEST_CODE].CASHIER_LOGINNAME = item.LAST_EXP_LOGINNAME;
+                                dicExtInfo["EXP_" + item.EXP_MEST_CODE].CASHIER_USERNAME = item.LAST_EXP_USERNAME;
                             }
                             var serviceReq = serviceRerqs.FirstOrDefault(o => (item.PRESCRIPTION_ID ?? item.SERVICE_REQ_ID) == o.ID);
                             if (serviceReq != null)
@@ -414,10 +432,15 @@ namespace MRS.Processor.Mrs00297
                                     dicExtInfo["IMP_" + item.IMP_MEST_CODE].CASHIER_USERNAME = bill.CASHIER_USERNAME;
                                     dicExtInfo["IMP_" + item.IMP_MEST_CODE].EXEMPTION = bill.EXEMPTION ?? 0;
                                 }
+                                else if (!string.IsNullOrEmpty(exp.CASHIER_LOGINNAME))
+                                {
+                                    dicExtInfo["EXP_" + item.IMP_MEST_CODE].CASHIER_LOGINNAME = exp.CASHIER_LOGINNAME;
+                                    dicExtInfo["EXP_" + item.IMP_MEST_CODE].CASHIER_USERNAME = exp.CASHIER_USERNAME;
+                                }
                                 else
                                 {
-                                    dicExtInfo["IMP_" + item.IMP_MEST_CODE].CASHIER_LOGINNAME = exp.CASHIER_LOGINNAME;
-                                    dicExtInfo["IMP_" + item.IMP_MEST_CODE].CASHIER_USERNAME = exp.CASHIER_USERNAME;
+                                    dicExtInfo["EXP_" + item.IMP_MEST_CODE].CASHIER_LOGINNAME = exp.LAST_EXP_LOGINNAME;
+                                    dicExtInfo["EXP_" + item.IMP_MEST_CODE].CASHIER_USERNAME = exp.LAST_EXP_USERNAME;
                                 }
                                 var serviceReq = serviceRerqs.FirstOrDefault(o => (exp.PRESCRIPTION_ID ?? exp.SERVICE_REQ_ID) == o.ID);
                                 if (serviceReq != null)
@@ -1018,6 +1041,8 @@ namespace MRS.Processor.Mrs00297
 
                 objectTag.AddObjectData(store, "Export1", listExport1.Where(p => p.EXP_MEST_TYPE_ID == IMSys.DbConfig.HIS_RS.HIS_EXP_MEST_TYPE.ID__BAN && p.RETURN_AMOUNT > 0).OrderBy(p => p.EXP_TIME).ToList());
                 objectTag.AddObjectData(store, "TotalExport1", TotalExport1.OrderBy(p => p.EXP_TIME).ToList());
+                objectTag.AddObjectData(store, "HisExpMests", listExpMest);
+                objectTag.AddObjectData(store, "HisTrasactions", listTransaction);
             }
             catch (Exception ex)
             {

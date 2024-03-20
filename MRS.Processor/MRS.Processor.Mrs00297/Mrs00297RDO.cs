@@ -48,6 +48,8 @@ namespace MRS.Processor.Mrs00297
 
         public string EXP_MEST_CODE { get; set; }
 
+        public long? BILL_ID { get; set; }
+
         public string IMP_MEST_CODE { get; set; }
 
         public decimal IMP_VAT_RATIO { get; set; }
@@ -77,6 +79,7 @@ namespace MRS.Processor.Mrs00297
     {
         public string CASHIER_LOGINNAME { get; set; }
         public string CASHIER_USERNAME { get; set; }
+        public string PAY_FORM_CODE { get; set; }
         public decimal EXEMPTION { get; set; }
         public long REQUEST_DEPARTMENT_ID { get; set; }
         public string REQUEST_DEPARTMENT_CODE { get; set; }

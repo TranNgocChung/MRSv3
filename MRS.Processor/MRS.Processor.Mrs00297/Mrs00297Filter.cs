@@ -24,5 +24,7 @@ namespace MRS.Processor.Mrs00297
         public string KEY_GROUP_EXP { get; set; }
 
         public List<long> REQUEST_DEPARTMENT_IDs { get; set; }
+
+        public List<string> CASHIER_LOGINNAMEs { get; set; }
     }
 }
